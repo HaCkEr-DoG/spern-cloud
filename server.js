@@ -4,7 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-
+app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json());
 
@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
   res.json({ status: 'SPERN Cloud is running' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`SPERN server running on port ${PORT}`);
 });
