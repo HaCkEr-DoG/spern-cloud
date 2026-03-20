@@ -1,10 +1,9 @@
 {
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm install --legacy-peer-deps"
+    "buildCommand": "npm install"
   },
   "deploy": {
-    "startCommand": "node server.js",
-    "restartPolicyType": "ON_FAILURE"
+    "startCommand": "node server.js"
   }
 }
