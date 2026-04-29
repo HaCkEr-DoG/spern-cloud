@@ -77,8 +77,6 @@ router.post('/alert', async (req, res) => {
 router.post('/accept', async (req, res) => {
   try {
     const { caseId, responderId } = req.body;
-
-    // Lock the case to this responder
     const updated = await Case.findOneAndUpdate(
       { caseId, status: 'active' },
       { status: 'accepted', assignedResponder: responderId },
@@ -92,13 +90,7 @@ router.post('/accept', async (req, res) => {
       });
     }
 
-    // Get responder phone and open VoIP
-    const responder = await Responder.findById(responderId);
-    if (responder) {
-      await openVoipBridge(updated, responder.phone);
-    }
-
-    res.json({ success: true, message: 'Case accepted and VoIP bridge opened' });
+    res.json({ success: true, message: 'Case accepted' });
 
   } catch (err) {
     console.error(err);
