@@ -127,5 +127,13 @@ router.post('/close', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
+// App polls this every 3 seconds
+router.get('/cases', async (req, res) => {
+  try {
+    const cases = await Case.find({ status: 'active' }).sort({ timestamp: -1 });
+    res.json({ success: true, cases });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 module.exports = router;
