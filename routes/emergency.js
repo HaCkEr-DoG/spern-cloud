@@ -32,18 +32,18 @@ router.post('/alert', async (req, res) => {
 // First responder accepts the case
 router.post('/accept', async (req, res) => {
   try {
-    const { caseId, responderId } = req.body;
+    const { caseId } = req.body;
 
     const updated = await Case.findOneAndUpdate(
       { caseId, status: 'active' },
-      { status: 'accepted', assignedResponder: responderId },
+      { status: 'accepted' },
       { new: true }
     );
 
     if (!updated) {
       return res.json({
         success: false,
-        message: 'Case already accepted by another responder'
+        message: 'Case already accepted or not found'
       });
     }
 
