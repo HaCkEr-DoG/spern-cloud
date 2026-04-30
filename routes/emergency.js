@@ -1,16 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const Case = require('../models/Case');
-const Responder = require('../models/Responder');
-const { notifyAllResponders } = require('../services/notify');
-const { openVoipBridge } = require('../services/voip');
 
 // ESP32 posts here when emergency confirmed
 router.post('/alert', async (req, res) => {
   try {
     const { caseId, lat, lng, speed, confidence, seatCount } = req.body;
 
-    // Save the case
     const newCase = await Case.create({
       caseId,
       gps: { lat, lng },
@@ -19,52 +15,12 @@ router.post('/alert', async (req, res) => {
       seatCount
     });
 
-    // Find all available responders within 2km
-    const nearby = await Responder.find({
-      available: true,
-      location: {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [lng, lat]
-          },
-          $maxDistance: 2000
-        }
-      }
-    });
-
-    console.log(`Found ${nearby.length} responders within 2km`);
-
-    // Notify all of them at once
-    await notifyAllResponders(nearby, newCase);
-
-    // 10 second fallback — escalate if nobody accepts
-    setTimeout(async () => {
-      const check = await Case.findById(newCase._id);
-      if (check && check.status === 'active') {
-        console.log(`Case ${caseId} not accepted — escalating to 3km`);
-
-        const wider = await Responder.find({
-          available: true,
-          location: {
-            $near: {
-              $geometry: {
-                type: 'Point',
-                coordinates: [lng, lat]
-              },
-              $maxDistance: 3000
-            }
-          }
-        });
-
-        await notifyAllResponders(wider, newCase);
-      }
-    }, 10000);
+    console.log(`Case created: ${caseId}`);
 
     res.json({
       success: true,
       caseId,
-      respondersAlerted: nearby.length
+      respondersAlerted: 0
     });
 
   } catch (err) {
@@ -77,6 +33,7 @@ router.post('/alert', async (req, res) => {
 router.post('/accept', async (req, res) => {
   try {
     const { caseId, responderId } = req.body;
+
     const updated = await Case.findOneAndUpdate(
       { caseId, status: 'active' },
       { status: 'accepted', assignedResponder: responderId },
@@ -105,10 +62,7 @@ router.post('/close', async (req, res) => {
 
     await Case.findOneAndUpdate(
       { caseId },
-      {
-        status: 'closed',
-        closedAt: new Date()
-      }
+      { status: 'closed', closedAt: new Date() }
     );
 
     console.log(`Case ${caseId} closed`);
@@ -119,6 +73,7 @@ router.post('/close', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 // App polls this every 3 seconds
 router.get('/cases', async (req, res) => {
   try {
@@ -128,4 +83,5 @@ router.get('/cases', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 module.exports = router;
