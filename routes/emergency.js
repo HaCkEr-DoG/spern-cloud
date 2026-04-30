@@ -83,5 +83,12 @@ router.get('/cases', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
+router.get('/cases/all', async (req, res) => {
+  try {
+    const cases = await Case.find().sort({ timestamp: -1 }).limit(20);
+    res.json({ success: true, cases });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 module.exports = router;
