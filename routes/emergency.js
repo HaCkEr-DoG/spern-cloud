@@ -91,12 +91,15 @@ router.post('/alert', async (req, res) => {
     console.log(`🔍 Searching for responders within ${SEARCH_RADIUS}m radius`);
     const responders = await Responder.find({
       available: true,
+
       fcmToken: {
         $exists: true,
         $ne: null
       },
+
+      "location.type": "Point",
+
       location: {
-        $exists: true,
         $near: {
           $geometry: {
             type: 'Point',
